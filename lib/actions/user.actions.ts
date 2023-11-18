@@ -1,11 +1,27 @@
-"use server"
+"use server";
 
-import {connectToDB} from "../mongoose";
 import { FilterQuery, SortOrder } from "mongoose";
-import User from "../models/user.model";
 import { revalidatePath } from "next/cache";
-import Thread from "../models/thread.model";
+
 import Community from "../models/community.model";
+import Thread from "../models/thread.model";
+import User from "../models/user.model";
+
+import { connectToDB } from "../mongoose";
+
+export async function fetchUser(userId: string) {
+  try {
+    connectToDB();
+
+    return await User.findOne({ id: userId }).populate({
+      path: "communities",
+      model: Community,
+    });
+  } catch (error: any) {
+    throw new Error(`Failed to fetch user: ${error.message}`);
+  }
+}
+
 interface Params {
   userId: string;
   username: string;
@@ -14,6 +30,7 @@ interface Params {
   image: string;
   path: string;
 }
+
 export async function updateUser({
   userId,
   bio,
@@ -44,19 +61,7 @@ export async function updateUser({
     throw new Error(`Failed to create/update user: ${error.message}`);
   }
 }
-export async function fetchUser(userId: string) {
-  try {
-    connectToDB();
 
-    return await User.findOne({ id: userId })
-    // .populate({
-    //   path: "communities",
-    //   model: Community,
-    // });
-  } catch (error: any) {
-    throw new Error(`Failed to fetch user: ${error.message}`);
-  }
-}
 export async function fetchUserPosts(userId: string) {
   try {
     connectToDB();
@@ -88,6 +93,7 @@ export async function fetchUserPosts(userId: string) {
     throw error;
   }
 }
+
 // Almost similar to Thead (search + pagination) and Community (search + pagination)
 export async function fetchUsers({
   userId,
@@ -146,6 +152,7 @@ export async function fetchUsers({
     throw error;
   }
 }
+
 export async function getActivity(userId: string) {
   try {
     connectToDB();
